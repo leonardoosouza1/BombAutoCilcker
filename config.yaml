@@ -78,7 +78,7 @@
     #
     # [pt_BR]
     # Valor padrão: 0.9
-    go_to_work_btn: 1
+    go_to_work_btn: 0.5
 
     # [en_US]
     # Default value: 0.9

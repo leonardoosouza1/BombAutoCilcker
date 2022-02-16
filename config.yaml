@@ -1,5 +1,5 @@
----
-
+--- # 45,132
+  
   # [en_US] Time intervals configuration
   #
   # [pt_BR] Configurações de intervalos de tempo
@@ -42,7 +42,7 @@
 
     # [en_US] Time interval between moviments
     # Default value (in seconds): 1 
-    #
+    # ghp_mWT7oTWaIwpUyJ
     # [pt_BR] Intervalo de tempo entre movimentos
     # Valor padrão (em segundos): 1
     interval_between_moviments: 1
@@ -129,7 +129,7 @@
   # all   = select all heroes (regardless of the stamina bar)
   # green = select the heroes with green stamina bar (half or full)
   # full  = select only the heroes with full stamina bar
-  #
+  # qBg7UAvFpnFvFxq92MNTGn
   # [pt_BR]
   # Valor padrão: green
   # Opções disponíveis:
@@ -146,5 +146,3 @@
   # Valor padrão : False
   # Opções disponíveis: False ou True
   save_log_to_file: True
-
-#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

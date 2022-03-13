@@ -61,6 +61,8 @@
   # [pt_BR] O quão confiante o bot precisa estar para clicar nos botões (valores entre 0 e 1. 0 é o valor mínimo, 1 é o valor máximo)
   #
   threshold:
+    balance: 0.7
+    bcoin: 0.7
     # [en_US]
     # Default value: 0.7
     #

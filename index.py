@@ -10,6 +10,10 @@ import pyautogui
 import time
 import sys
 import yaml
+from pynput.keyboard import Key, Controller
+from PIL import Image
+import pytesseract
+
 
 # Load config file.
 stream = open("config.yaml", 'r')
@@ -17,36 +21,58 @@ c = yaml.safe_load(stream)
 ct = c['threshold']
 ch = c['home']
 pause = c['time_intervals']['interval_between_moviments']
+login = c['login_type']
+username = login['username']
+password = login['password']
 pyautogui.PAUSE = pause
+counter = 0
 
-cat = """
+startText = """
 
-          ☆ （ • •）☆
           ╔uu══════════════════╗☆
           ❝   Auto Clicker On
           ╚══════nn════════════╝
 
-░░░░░░░░░░░░░░░░░░░░░░█████████░░░░░░░░░
-░░███████░░░░░░░░░░███▒▒▒▒▒▒▒▒███░░░░░░░
-░░█▒▒▒▒▒▒█░░░░░░░███▒▒▒▒▒▒▒▒▒▒▒▒▒███░░░░
-░░░█▒▒▒▒▒▒█░░░░██▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██░░
-░░░░█▒▒▒▒▒█░░░██▒▒▒▒▒██▒▒▒▒▒▒██▒▒▒▒▒███░
-░░░░░█▒▒▒█░░░█▒▒▒▒▒▒████▒▒▒▒████▒▒▒▒▒▒██
-░░░█████████████▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██
-░░░█▒▒▒▒▒▒▒▒▒▒▒▒█▒▒▒▒▒▒▒▒▒█▒▒▒▒▒▒▒▒▒▒▒██
-░██▒▒▒▒▒▒▒▒▒▒▒▒▒█▒▒▒██▒▒▒▒▒▒▒▒▒▒██▒▒▒▒██
-██▒▒▒███████████▒▒▒▒▒██▒▒▒▒▒▒▒▒██▒▒▒▒▒██
-█▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█▒▒▒▒▒▒████████▒▒▒▒▒▒▒██
-██▒▒▒▒▒▒▒▒▒▒▒▒▒▒█▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██░
-░█▒▒▒███████████▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██░░░
-░██▒▒▒▒▒▒▒▒▒▒████▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█░░░░░
-░░████████████░░░█████████████████░░░░░
+"""
+
+sencondText = """
 
             ╔═══════════════╗
-            ║ |||||||||||||  ║
+            ║ LOADING.....  ║
             ╚═══════════════╝
 
 """
+
+
+def press_key(key, seconds):
+    keyboard.press(key)
+    time.sleep(seconds)
+    keyboard.release(key)
+
+
+keyboard = Controller()
+
+time.sleep(2)
+
+
+def balance():
+    # use the same function to get the bheroes information
+    clickBtn(images['chest-icon'], timeout=5)
+    time.sleep(3)
+
+    bcoin_pos = positions(images['bcoin-text'], threshold=ct['balance'])
+    balance_pos = positions(images['balance-text'], threshold=ct['bcoin'])
+    time.sleep(3)
+    h = balance_pos[0][0]
+    v = bcoin_pos[0][1]
+    time.sleep(1)
+    for number in bcoin_pos[0]:
+        print(number)
+    img = printSreenBalance(h, v)
+    thatString = pytesseract.image_to_string(img)
+    logger(thatString)
+    time.sleep(3)
+    clickBtn(images['x'], timeout=5)
 
 
 def addRandomness(n, randomn_factor_size=None):
@@ -163,10 +189,21 @@ def printSreen():
     with mss.mss() as sct:
         monitor = sct.monitors[0]
         sct_img = np.array(sct.grab(monitor))
-        # The screen part to capture
-        # monitor = {"top": 160, "left": 160, "width": 1000, "height": 135}
 
-        # Grab the data
+        return sct_img[:, :, :3]
+
+
+def printSreenBalance(x, y):
+    with mss.mss() as sct:
+        monitor = sct.monitors[0]
+
+        left = monitor["left"] + x
+        top = monitor["top"] + y
+        right = left + 116
+        lower = top + 42
+        bbox = (left, top, right, lower)
+        sct_img = np.array(sct.grab(bbox))
+
         return sct_img[:, :, :3]
 
 
@@ -313,7 +350,7 @@ def goToHeroes():
 def goToGame():
     # in case of server overload popup
     clickBtn(images['x'])
-    # time.sleep(3)
+    time.sleep(3)
     clickBtn(images['x'])
 
     clickBtn(images['treasure-hunt-icon'])
@@ -325,7 +362,7 @@ def refreshHeroesPositions():
     clickBtn(images['go-back-arrow'])
     clickBtn(images['treasure-hunt-icon'])
 
-    # time.sleep(3)
+    time.sleep(3)
     clickBtn(images['treasure-hunt-icon'])
 
 
@@ -333,19 +370,66 @@ def login():
     global login_attempts
     logger('😿 Checking if game has disconnected')
 
+    if clickBtn(images['ok'], timeout=5):
+        logger('😿 Game has disconnected')
+        pass
+        # time.sleep(15)
+        # print('ok button clicked')
     if login_attempts > 3:
         logger('🔃 Too many login attempts, refreshing')
         login_attempts = 0
         pyautogui.hotkey('ctrl', 'f5')
         return
 
-    if clickBtn(images['connect-wallet'], timeout=10):
+    if clickBtn(images['connect'], timeout=10):
         logger('🎉 Connect wallet button detected, logging in!')
         login_attempts = login_attempts + 1
         # TODO mto ele da erro e poco o botao n abre
         # time.sleep(10)
 
-    if clickBtn(images['select-wallet-2'], timeout=8):
+        if login == 0:
+            clickBtn(images['Login with metamask'], timeout=8)
+            logger('🔃 Metamask, logging in!')
+            login_attempts = login_attempts + 1
+            time.sleep(5)
+            clickBtn(images['sing-metamask'], timeout=15)
+            time.sleep(5)
+            clickBtn(images['sing-metamask'], timeout=15)
+        else:
+            logger('🔃 Login with username and password')
+
+            if clickBtn(images['username-text'], timeout=15):
+                for letter in username:
+                    press_key(letter, 2)
+            else:
+                logger('🔃 Username has been detected, skipping')
+
+            logger('🔃 Password')
+            time.sleep(5)
+
+            if clickBtn(images['password-text'], timeout=15):
+                for letter in password:
+                    press_key(letter, 2)
+            else:
+                logger('🔃 Password has been detected, skipping')
+
+            logger('🔃 logging in!')
+            clickBtn(images['login'], timeout=15)
+            time.sleep(5)
+            clickBtn(images['login'], timeout=15)
+
+            # while counter < len(username):
+            #     # pressiona por 5 segundos
+            #     press_key('z', 2)
+
+            #     # espera 1 segundo para executar tecla A
+            #     time.sleep(1)
+
+            #     # pressiona por 4 segundos
+            #     press_key('a', 2)
+
+            #     # espera 5 segundos para executar novamente
+
         # sometimes the sign popup appears imediately
         login_attempts = login_attempts + 1
         # print('sign button clicked')
@@ -356,31 +440,26 @@ def login():
         return
         # click ok button
 
-    if not clickBtn(images['select-wallet-1-no-hover'], ):
-        if clickBtn(images['select-wallet-1-hover'], threshold=ct['select_wallet_buttons']):
-            pass
-            # o ideal era que ele alternasse entre checar cada um dos 2 por um tempo
-            # print('sleep in case there is no metamask text removed')
-            # time.sleep(20)
-    else:
-        pass
-        # print('sleep in case there is no metamask text removed')
-        # time.sleep(20)
+    # if not clickBtn(images['select-wallet-1-no-hover'], ):
+    #     if clickBtn(images['select-wallet-1-hover'], threshold=ct['select_wallet_buttons']):
+    #         pass
+    #         # o ideal era que ele alternasse entre checar cada um dos 2 por um tempo
+    #         # print('sleep in case there is no metamask text removed')
+    #         # time.sleep(20)
+    # else:
+    #     pass
+    #     # print('sleep in case there is no metamask text removed')
+    #     # time.sleep(20)
 
-    if clickBtn(images['select-wallet-2'], timeout=20):
-        login_attempts = login_attempts + 1
-        # print('sign button clicked')
-        # print('{} login attempt'.format(login_attempts))
-        # time.sleep(25)
-        if clickBtn(images['treasure-hunt-icon'], timeout=25):
-            # print('sucessfully login, treasure hunt btn clicked')
-            login_attempts = 0
-        # time.sleep(15)
-
-    if clickBtn(images['ok'], timeout=5):
-        pass
-        # time.sleep(15)
-        # print('ok button clicked')
+    # if clickBtn(images['select-wallet-2'], timeout=20):
+    #     login_attempts = login_attempts + 1
+    #     # print('sign button clicked')
+    #     # print('{} login attempt'.format(login_attempts))
+    #     # time.sleep(25)
+    #     if clickBtn(images['treasure-hunt-icon'], timeout=25):
+    #         # print('sucessfully login, treasure hunt btn clicked')
+    #         login_attempts = 0
+    #     # time.sleep(15)
 
 
 def sendHeroesHome():
@@ -422,7 +501,7 @@ def sendHeroesHome():
 
 def refreshHeroes():
     logger('🏢 Search for heroes to work')
-
+    # balance()
     goToHeroes()
 
     if c['select_heroes_mode'] == "full":
@@ -473,8 +552,9 @@ def main():
         print('>>---> Home feature not enabled')
     print('\n')
 
-    print(cat)
-    time.sleep(7)
+    print(startText)
+    print(sencondText)
+    time.sleep(5)
     t = c['time_intervals']
 
     last = {

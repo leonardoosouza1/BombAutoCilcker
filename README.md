@@ -13,3 +13,7 @@ Create a learning process, so that it can be possible for the machine to learn t
 I'm finishing my course at the university, after completion I will dedicate myself to the project, but for now, I'm bringing small improvements
 
 
+### new features
+
+add new form of login, using metamask and username and password. you need to add your credentials in config.yaml file
+ 
